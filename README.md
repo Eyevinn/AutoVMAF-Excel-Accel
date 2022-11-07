@@ -1,6 +1,6 @@
 # AutoVMAF Excel Accelerator
 
-Generate an Excel-file, using results from AutoVMAF-API. Complete with graphs and auto-suggested ladders.
+Generate an Excel-file, using results from [AutoVMAF-API](https://github.com/Eyevinn/autovmaf-api). Complete with graphs and auto-suggested ladders.
 
 ## How?
 
@@ -14,7 +14,7 @@ Generate an Excel-file, using results from AutoVMAF-API. Complete with graphs an
 bash get-results.sh
 ```
 
-4. Install the required python packages. You might want to use a [virtual environment] (https://docs.python.org/3/tutorial/venv.html) for this.
+4. Install the required python packages. You might want to use a [virtual environment](https://docs.python.org/3/tutorial/venv.html) for this.
 
 ```
 pip install -r requirements.txt
