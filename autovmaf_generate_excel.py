@@ -2,6 +2,7 @@
 
 import json
 
+from os.path import exists as file_exists
 from openpyxl import Workbook
 from openpyxl.chart import Reference, LineChart
 from openpyxl.utils import get_column_letter
@@ -9,8 +10,15 @@ from openpyxl.utils.units import pixels_to_EMU
 from openpyxl.styles import PatternFill, Border, Side
 from openpyxl.formatting.rule import CellIsRule
 
-with open('jobnames.txt', encoding="utf-8") as f:
-    jobnames = [line.rstrip() for line in f]
+
+JOBNAMES_FILE = '50p.txt'
+
+if file_exists(JOBNAMES_FILE):
+    with open(JOBNAMES_FILE, encoding="utf-8") as f:
+        jobnames = [line.rstrip() for line in f]
+else:
+    print(f'Can not file file {JOBNAMES_FILE}')
+    exit()
 
 COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
           '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
@@ -38,15 +46,17 @@ border = Border(top=border_style, bottom=border_style,
 
 
 for jobname in jobnames:
-    with open(f"./results/{jobname}.json", encoding="utf-8") as f:
-        the_file = json.load(f)
+    RESULT_FILE = f"./results/{jobname}.json"
+    if file_exists(RESULT_FILE):
+        with open(RESULT_FILE, encoding="utf-8") as f:
+            the_file = json.load(f)
+    else:
+        print(f'Can not file file {RESULT_FILE}')
+        exit()
     jobname_trunc = jobname[:31]
     heights = []
     bitrates = []
     resolutions = []
-
-    with open(f"./results/{jobname}_ladder.json", encoding="utf-8") as f:
-        the_ladder = json.load(f)
 
     for model in the_file["result"][jobname]:
         results = the_file["result"][jobname][model]
@@ -169,27 +179,44 @@ for jobname in jobnames:
                                       stopIfTrue=True,
                                       fill=redFill))
 
-    autoladder = [["Auto-Ladder", "", ""]]
+    LADDER_FILE = f"./results/{jobname}_ladder.json"
 
-    for ladder in the_ladder:
-        w = ladder["resolution"]["width"]
-        h = ladder["resolution"]["height"]
+    if file_exists(LADDER_FILE):
+        with open(LADDER_FILE, encoding="utf-8") as f:
+            try:
+                the_ladder = json.load(f)
+            except json.decoder.JSONDecodeError:
+                print(f"Can't parse {LADDER_FILE}")
 
-        row = [f'{w}x{h}', ladder["bitrate"]/1000, ladder["vmaf"]]
-        autoladder.append(row)
+        autoladder = [["Auto-Ladder", "", ""]]
 
-    scores = [s[2] for s in autoladder]
+        try:
+            if the_ladder:
+                for ladder in the_ladder:
+                    w = ladder["resolution"]["width"]
+                    h = ladder["resolution"]["height"]
 
-    for row in ws.rows:
-        for cell in row:
-            if cell.value is not (None or "") and cell.value in scores:
-                cell.fill = greenFill
-                cell.border = border
+                    row = [f'{w}x{h}', ladder["bitrate"]/1000, ladder["vmaf"]]
+                    autoladder.append(row)
+            else:
+                print(f'Can not generate auto-ladder')
 
-    for row in autoladder:
-        ws.append(row)
+            scores = [s[2] for s in autoladder]
+
+            for row in ws.rows:
+                for cell in row:
+                    if cell.value is not (None or "") and cell.value in scores:
+                        cell.fill = greenFill
+                        cell.border = border
+
+            for row in autoladder:
+                ws.append(row)
+        except NameError:
+            pass
+    else:
+        print(f'Can not find {LADDER_FILE}, will not generate auto-ladder')
 
 
 wb.save("vmaf.xlsx")
 
-print("File generated")
+print("File generated!")
