@@ -11,13 +11,13 @@ from openpyxl.styles import PatternFill, Border, Side
 from openpyxl.formatting.rule import CellIsRule
 
 
-JOBNAMES_FILE = '50p.txt'
+JOBNAMES_FILE = 'jobnames.txt'
 
 if file_exists(JOBNAMES_FILE):
     with open(JOBNAMES_FILE, encoding="utf-8") as f:
         jobnames = [line.rstrip() for line in f]
 else:
-    print(f'Can not file file {JOBNAMES_FILE}')
+    print(f'Can not find {JOBNAMES_FILE}')
     exit()
 
 COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
@@ -51,7 +51,7 @@ for jobname in jobnames:
         with open(RESULT_FILE, encoding="utf-8") as f:
             the_file = json.load(f)
     else:
-        print(f'Can not file file {RESULT_FILE}')
+        print(f'Can not find {RESULT_FILE}')
         exit()
     jobname_trunc = jobname[:31]
     heights = []
@@ -193,6 +193,7 @@ for jobname in jobnames:
         try:
             if the_ladder:
                 for ladder in the_ladder:
+                    print('LADDER:', the_ladder)
                     w = ladder["resolution"]["width"]
                     h = ladder["resolution"]["height"]
 
