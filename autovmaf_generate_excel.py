@@ -20,14 +20,9 @@ else:
     print(f'Can not find {JOBNAMES_FILE}')
     exit()
 
-COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-          '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-          '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-          '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-          '#ffffff', '#000000']
-
 wb = Workbook()
 
+redLine = 'ff0000'
 redFill = PatternFill(start_color='ff9494',
                       end_color='ff9494',
                       fill_type='solid')
@@ -91,10 +86,11 @@ for jobname in jobnames:
 
     ws = wb.create_sheet(jobname_trunc)
 
-    table = [["Kbit/s"] + resolutions]
+    table = [["Kbit/s", "Ref"] + resolutions]
 
     for b in bitrates:
-        row = [b/1000]
+        # 93 is the reference point
+        row = [b/1000, 93]
         for h in heights:
             matches = [
                 item
@@ -118,7 +114,7 @@ for jobname in jobnames:
 
     MIN_COL = 2 + OFFSET
     MIN_ROW = 1
-    MAX_COL = len(resolutions) + 1+OFFSET
+    MAX_COL = len(resolutions) + 2 + OFFSET
     MAX_ROW = len(table)
 
     values = Reference(
@@ -144,12 +140,13 @@ for jobname in jobnames:
     chart.y_axis.scaling.min = 0
     chart.y_axis.scaling.max = 100
 
-    for i, line in enumerate(chart.series):
-        line.graphicalProperties.line.width = pixels_to_EMU(4)
-        line.graphicalProperties.line.solidFill = COLORS[i][1:]
-        line.marker.graphicalProperties.solidFill = COLORS[i][1:]
-        line.marker.symbol = "diamond"
-        line.marker.size = 4
+    # Red line for constant reference value
+    chart_data_series = chart.series[0]
+    chart_data_series.graphicalProperties.line.width = pixels_to_EMU(4)
+    chart_data_series.graphicalProperties.line.solidFill = redLine
+    chart_data_series.marker.graphicalProperties.solidFill = redLine
+    chart_data_series.marker.symbol = "diamond"
+    chart_data_series.marker.size = 2
 
     ws.add_chart(chart, "A1")
     ACTIVE_COLUMN_LIST = [get_column_letter(cell.column) for cell in ws[1]]
@@ -193,14 +190,13 @@ for jobname in jobnames:
         try:
             if the_ladder:
                 for ladder in the_ladder:
-                    print('LADDER:', the_ladder)
                     w = ladder["resolution"]["width"]
                     h = ladder["resolution"]["height"]
 
                     row = [f'{w}x{h}', ladder["bitrate"]/1000, ladder["vmaf"]]
                     autoladder.append(row)
             else:
-                print(f'Can not generate auto-ladder')
+                print(f'Can not generate auto-ladder for resolution {w}x{h} bw:{ladder["bitrate"]/1000}')
 
             scores = [s[2] for s in autoladder]
 
@@ -217,7 +213,5 @@ for jobname in jobnames:
     else:
         print(f'Can not find {LADDER_FILE}, will not generate auto-ladder')
 
-
 wb.save("vmaf.xlsx")
-
 print("File generated!")

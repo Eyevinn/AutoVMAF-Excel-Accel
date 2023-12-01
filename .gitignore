@@ -169,3 +169,5 @@ results/**
 results**
 .vscode
 vmaf.xlsx
+jobnames.txt
+*.xlsx
