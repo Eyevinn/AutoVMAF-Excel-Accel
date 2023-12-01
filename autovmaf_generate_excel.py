@@ -20,14 +20,9 @@ else:
     print(f'Can not find {JOBNAMES_FILE}')
     exit()
 
-COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-          '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe',
-          '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000',
-          '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080',
-          '#ffffff', '#000000']
-
 wb = Workbook()
 
+redLine = 'ff0000'
 redFill = PatternFill(start_color='ff9494',
                       end_color='ff9494',
                       fill_type='solid')
@@ -148,8 +143,8 @@ for jobname in jobnames:
     # Red line for constant reference value
     chart_data_series = chart.series[0]
     chart_data_series.graphicalProperties.line.width = pixels_to_EMU(4)
-    chart_data_series.graphicalProperties.line.solidFill = 'ff0000'
-    chart_data_series.marker.graphicalProperties.solidFill = 'ff0000'
+    chart_data_series.graphicalProperties.line.solidFill = redLine
+    chart_data_series.marker.graphicalProperties.solidFill = redLine
     chart_data_series.marker.symbol = "diamond"
     chart_data_series.marker.size = 2
 
