@@ -15,7 +15,9 @@ JOBNAMES_FILE = 'jobnames.txt'
 
 if file_exists(JOBNAMES_FILE):
     with open(JOBNAMES_FILE, encoding="utf-8") as f:
-        jobnames = [line.rstrip() for line in f]
+        # remove comments, then filter empty lines
+        jobnames = [line.split("#")[0].strip() for line in f]
+        jobnames = [*filter(None, jobnames)]
 else:
     print(f'Can not find {JOBNAMES_FILE}')
     exit()
