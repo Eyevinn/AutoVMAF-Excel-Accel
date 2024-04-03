@@ -5,9 +5,9 @@ PORT="3000"
 
 processJob () {
     echo "Fetching '${1}' results..."
-    curl -s "${HOST}:${PORT}/autoabr/result/${1}/" > "results/${1}.json"
+    curl -s "${HOST}:${PORT}/autoabr/result/${1}/" -o "results/${1}.json"
     echo "Fetching '${1}' auto-ladder..."
-    curl -s "${HOST}:${PORT}/autovmaf/ladder/${1}/" > "results/${1}_ladder.json"
+    curl -s "${HOST}:${PORT}/autovmaf/ladder/${1}/" -o "results/${1}_ladder.json"
 }
 
 test -d results || mkdir results
