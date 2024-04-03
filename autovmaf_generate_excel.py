@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import json
+import logging
 
 from os.path import exists as file_exists
+from typing import Any
 from openpyxl import Workbook
 from openpyxl.chart import Reference, LineChart
 from openpyxl.utils import get_column_letter
@@ -11,16 +14,16 @@ from openpyxl.styles import PatternFill, Border, Side
 from openpyxl.formatting.rule import CellIsRule
 
 
+logger = logging.getLogger("autovmaf-excel")
 JOBNAMES_FILE = 'jobnames.txt'
 
-if file_exists(JOBNAMES_FILE):
-    with open(JOBNAMES_FILE, encoding="utf-8") as f:
-        # remove comments, then filter empty lines
-        jobnames = [line.split("#")[0].strip() for line in f]
-        jobnames = [*filter(None, jobnames)]
-else:
-    print(f'Can not find {JOBNAMES_FILE}')
-    exit()
+if not file_exists(JOBNAMES_FILE):
+    exit(f'Could not find "{JOBNAMES_FILE}"')
+
+with open(JOBNAMES_FILE, encoding="utf-8") as f:
+    # remove comments, then filter empty lines
+    jobnames = [line.split("#")[0].strip() for line in f]
+    jobnames = [*filter(None, jobnames)]
 
 wb = Workbook()
 
@@ -44,19 +47,34 @@ border = Border(top=border_style, bottom=border_style,
 
 for jobname in jobnames:
     RESULT_FILE = f"./results/{jobname}.json"
-    if file_exists(RESULT_FILE):
+    if not file_exists(RESULT_FILE):
+        logger.warning(f'⚠️  Skipping "{RESULT_FILE}": Not found.')
+        continue
+    try:
         with open(RESULT_FILE, encoding="utf-8") as f:
-            the_file = json.load(f)
-    else:
-        print(f'Can not find {RESULT_FILE}')
-        exit()
+            json_data = json.load(f)
+            result: dict[str, Any] = json_data["result"]
+            models = result.get(jobname)
+            if not models:
+                result_names = [*result.keys()]
+                if len(result_names) == 1:
+                    logger.warning(f'⚠️  "{RESULT_FILE}" does not contain the result for "{jobname}", using "{result_names[0]}" instead. This can happen if renaming the file.')
+                    models = result[result_names[0]]
+                else:
+                    logger.warning(f'⚠️  "{RESULT_FILE}" results "{result_names}" does not contain "{jobname}"')
+                    continue
+    except Exception as err:
+        logger.warning(f'⚠️  Skipping "{RESULT_FILE}": Could not parse.', err)
+        continue
+
+
     jobname_trunc = jobname[:31]
     heights = []
     bitrates = []
     resolutions = []
 
-    for model in the_file["result"][jobname]:
-        results = the_file["result"][jobname][model]
+    for model in models:
+        results = models[model]
 
         if len(results) > 0:
             r = []
@@ -185,7 +203,7 @@ for jobname in jobnames:
             try:
                 the_ladder = json.load(f)
             except json.decoder.JSONDecodeError:
-                print(f"Can't parse {LADDER_FILE}")
+                logger.warning(f"⚠️  Can't parse {LADDER_FILE}")
 
         autoladder = [["Auto-Ladder", "", ""]]
 
@@ -198,7 +216,7 @@ for jobname in jobnames:
                     row = [f'{w}x{h}', ladder["bitrate"]/1000, ladder["vmaf"]]
                     autoladder.append(row)
             else:
-                print(f'Can not generate auto-ladder for resolution {w}x{h} bw:{ladder["bitrate"]/1000}')
+                logger.warning(f'⚠️  Can not generate auto-ladder for resolution {w}x{h} bw:{ladder["bitrate"]/1000}')
 
             scores = [s[2] for s in autoladder]
 
@@ -213,7 +231,7 @@ for jobname in jobnames:
         except NameError:
             pass
     else:
-        print(f'Can not find {LADDER_FILE}, will not generate auto-ladder')
+        logger.warning(f'⚠️  Can not find {LADDER_FILE}, will not generate auto-ladder')
 
 wb.save("vmaf.xlsx")
 print("File generated!")
