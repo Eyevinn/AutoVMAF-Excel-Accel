@@ -216,7 +216,7 @@ for jobname in jobnames:
                     row = [f'{w}x{h}', ladder["bitrate"]/1000, ladder["vmaf"]]
                     autoladder.append(row)
             else:
-                logger.warning(f'⚠️  Can not generate auto-ladder for resolution {w}x{h} bw:{ladder["bitrate"]/1000}')
+                logger.warning(f'⚠️  Can not generate auto-ladder for {jobname} resolution {w}x{h} bw:{ladder["bitrate"]/1000}')
 
             scores = [s[2] for s in autoladder]
 
